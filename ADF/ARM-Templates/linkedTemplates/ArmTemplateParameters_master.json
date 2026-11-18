@@ -1,0 +1,36 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "value": "adf-sql-migration01"
+        },
+        "LS_SQLSERVER_ONPREM_password": {
+            "value": ""
+        },
+        "LS_ADLS_MIGRATION_accountKey": {
+            "value": ""
+        },
+        "integrationRuntime1_properties_typeProperties_linkedInfo_resourceId": {
+            "value": "/subscriptions/5a596385-e620-432b-bf0f-0c0b12f9dafe/resourcegroups/rg_mohammad1/providers/Microsoft.DataFactory/factories/adfmultifilepractice01/integrationruntimes/IR-MYSQL-LOCAL-NEW"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_server": {
+            "value": ".\\SQLEXPRESS"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_database": {
+            "value": "SQL_ADF_Migration_Project"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_userName": {
+            "value": "adf_sql_login"
+        },
+        "LS_ADLS_MIGRATION_properties_typeProperties_url": {
+            "value": "https://migrationfromsqltoadls.dfs.core.windows.net"
+        },
+        "containerUri": {
+            "value": ""
+        },
+        "containerSasToken": {
+            "value": ""
+        }
+    }
+}

@@ -1,0 +1,410 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "adf-sql-migration01"
+        },
+        "LS_ADLS_MIGRATION_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'LS_ADLS_MIGRATION'"
+        },
+        "LS_SQLSERVER_ONPREM_password": {
+            "type": "secureString",
+            "metadata": "Secure string for 'password' of 'LS_SQLSERVER_ONPREM'"
+        },
+        "integrationRuntime1_properties_typeProperties_linkedInfo_resourceId": {
+            "type": "string",
+            "defaultValue": "/subscriptions/5a596385-e620-432b-bf0f-0c0b12f9dafe/resourcegroups/rg_mohammad1/providers/Microsoft.DataFactory/factories/adfmultifilepractice01/integrationruntimes/IR-MYSQL-LOCAL-NEW"
+        },
+        "LS_ADLS_MIGRATION_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://migrationfromsqltoadls.dfs.core.windows.net"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_server": {
+            "type": "string",
+            "defaultValue": ".\\SQLEXPRESS"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_database": {
+            "type": "string",
+            "defaultValue": "SQL_ADF_Migration_Project"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_userName": {
+            "type": "string",
+            "defaultValue": "adf_sql_login"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "[concat(parameters('factoryName'), '/integrationRuntime1')]",
+            "type": "Microsoft.DataFactory/factories/integrationRuntimes",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "type": "SelfHosted",
+                "typeProperties": {
+                    "linkedInfo": {
+                        "resourceId": "[parameters('integrationRuntime1_properties_typeProperties_linkedInfo_resourceId')]",
+                        "authorizationType": "Rbac"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_ADLS_MIGRATION')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "AzureBlobFS",
+                "typeProperties": {
+                    "url": "[parameters('LS_ADLS_MIGRATION_properties_typeProperties_url')]",
+                    "accountKey": {
+                        "type": "SecureString",
+                        "value": "[parameters('LS_ADLS_MIGRATION_accountKey')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_ADLS_PARQUET_SINK')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_ADLS_MIGRATION",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "Parquet",
+                "typeProperties": {
+                    "location": {
+                        "type": "AzureBlobFSLocation",
+                        "folderPath": "dimcustomer",
+                        "fileSystem": "bronze"
+                    },
+                    "compressionCodec": "snappy"
+                },
+                "schema": []
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_ADLS_MIGRATION')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/LS_SQLSERVER_ONPREM')]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "annotations": [],
+                "type": "SqlServer",
+                "typeProperties": {
+                    "server": "[parameters('LS_SQLSERVER_ONPREM_properties_typeProperties_server')]",
+                    "database": "[parameters('LS_SQLSERVER_ONPREM_properties_typeProperties_database')]",
+                    "encrypt": "mandatory",
+                    "trustServerCertificate": true,
+                    "authenticationType": "SQL",
+                    "userName": "[parameters('LS_SQLSERVER_ONPREM_properties_typeProperties_userName')]",
+                    "password": {
+                        "type": "SecureString",
+                        "value": "[parameters('LS_SQLSERVER_ONPREM_password')]"
+                    }
+                },
+                "connectVia": {
+                    "referenceName": "integrationRuntime1",
+                    "type": "IntegrationRuntimeReference"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/integrationRuntimes/integrationRuntime1')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/DS_SQLSERVER_SOURCE')]",
+            "type": "Microsoft.DataFactory/factories/datasets",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "linkedServiceName": {
+                    "referenceName": "LS_SQLSERVER_ONPREM",
+                    "type": "LinkedServiceReference"
+                },
+                "annotations": [],
+                "type": "SqlServerTable",
+                "schema": [
+                    {
+                        "name": "CustomerKey",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "CustomerID",
+                        "type": "int",
+                        "precision": 10
+                    },
+                    {
+                        "name": "FirstName",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "LastName",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "Email",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "City",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "Country",
+                        "type": "varchar"
+                    },
+                    {
+                        "name": "StartDate",
+                        "type": "date"
+                    },
+                    {
+                        "name": "EndDate",
+                        "type": "date"
+                    },
+                    {
+                        "name": "IsCurrent",
+                        "type": "bit"
+                    }
+                ],
+                "typeProperties": {
+                    "schema": "dbo",
+                    "table": "DimCustomer"
+                }
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/linkedServices/LS_SQLSERVER_ONPREM')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_SQL_TO_ADLS_DIMCUSTOMER')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "COPY_DIMCUSTOMER_TO_BRONZE",
+                        "type": "Copy",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlServerSource",
+                                "sqlReaderQuery": "SELECT *\nFROM dbo.DimCustomer;",
+                                "queryTimeout": "02:00:00",
+                                "partitionOption": "None"
+                            },
+                            "sink": {
+                                "type": "ParquetSink",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSWriteSettings"
+                                },
+                                "formatSettings": {
+                                    "type": "ParquetWriteSettings"
+                                }
+                            },
+                            "enableStaging": false,
+                            "translator": {
+                                "type": "TabularTranslator",
+                                "typeConversion": true,
+                                "typeConversionSettings": {
+                                    "allowDataTruncation": true,
+                                    "treatBooleanAsNumber": false
+                                }
+                            }
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "DS_SQLSERVER_SOURCE",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "DS_ADLS_PARQUET_SINK",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ]
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "annotations": [],
+                "lastPublishTime": "2026-11-07T13:02:24Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DS_SQLSERVER_SOURCE')]",
+                "[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_SINK')]"
+            ]
+        },
+        {
+            "name": "[concat(parameters('factoryName'), '/PL_INCREMENTAL_DIMCUSTOMER')]",
+            "type": "Microsoft.DataFactory/factories/pipelines",
+            "apiVersion": "2018-06-01",
+            "properties": {
+                "activities": [
+                    {
+                        "name": "LOOKUP_CUSTOMER_WATERMARK",
+                        "type": "Lookup",
+                        "dependsOn": [],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlServerSource",
+                                "sqlReaderQuery": "SELECT LastLoadValue\nFROM dbo.WatermarkTable\nWHERE TableName = 'DimCustomer';",
+                                "queryTimeout": "02:00:00",
+                                "partitionOption": "None"
+                            },
+                            "dataset": {
+                                "referenceName": "DS_SQLSERVER_SOURCE",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        }
+                    },
+                    {
+                        "name": "COPY_NEW_CUSTOMERS",
+                        "type": "Copy",
+                        "dependsOn": [
+                            {
+                                "activity": "LOOKUP_CUSTOMER_WATERMARK",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "source": {
+                                "type": "SqlServerSource",
+                                "sqlReaderQuery": "SELECT *\nFROM dbo.DimCustomer\nWHERE CustomerKey >\n(\n    SELECT LastLoadValue\n    FROM dbo.WatermarkTable\n    WHERE TableName = 'DimCustomer'\n);",
+                                "queryTimeout": "02:00:00",
+                                "partitionOption": "None"
+                            },
+                            "sink": {
+                                "type": "ParquetSink",
+                                "storeSettings": {
+                                    "type": "AzureBlobFSWriteSettings"
+                                },
+                                "formatSettings": {
+                                    "type": "ParquetWriteSettings"
+                                }
+                            },
+                            "enableStaging": false,
+                            "translator": {
+                                "type": "TabularTranslator",
+                                "typeConversion": true,
+                                "typeConversionSettings": {
+                                    "allowDataTruncation": true,
+                                    "treatBooleanAsNumber": false
+                                }
+                            }
+                        },
+                        "inputs": [
+                            {
+                                "referenceName": "DS_SQLSERVER_SOURCE",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "referenceName": "DS_ADLS_PARQUET_SINK",
+                                "type": "DatasetReference",
+                                "parameters": {}
+                            }
+                        ]
+                    },
+                    {
+                        "name": "UPDATE_CUSTOMER_WATERMARK",
+                        "type": "SqlServerStoredProcedure",
+                        "dependsOn": [
+                            {
+                                "activity": "COPY_NEW_CUSTOMERS",
+                                "dependencyConditions": [
+                                    "Succeeded"
+                                ]
+                            }
+                        ],
+                        "policy": {
+                            "timeout": "0.12:00:00",
+                            "retry": 0,
+                            "retryIntervalInSeconds": 30,
+                            "secureOutput": false,
+                            "secureInput": false
+                        },
+                        "userProperties": [],
+                        "typeProperties": {
+                            "storedProcedureName": "[[dbo].[UpdateWatermark]",
+                            "storedProcedureParameters": {
+                                "TableSchema": {
+                                    "value": "dbo",
+                                    "type": "String"
+                                },
+                                "TableName": {
+                                    "value": "DimCustomer",
+                                    "type": "String"
+                                },
+                                "WatermarkColumn": {
+                                    "value": "CustomerKey",
+                                    "type": "String"
+                                }
+                            }
+                        },
+                        "linkedServiceName": {
+                            "referenceName": "LS_SQLSERVER_ONPREM",
+                            "type": "LinkedServiceReference"
+                        }
+                    }
+                ],
+                "policy": {
+                    "elapsedTimeMetric": {}
+                },
+                "annotations": [],
+                "lastPublishTime": "2026-11-07T13:23:02Z"
+            },
+            "dependsOn": [
+                "[concat(variables('factoryId'), '/datasets/DS_SQLSERVER_SOURCE')]",
+                "[concat(variables('factoryId'), '/datasets/DS_ADLS_PARQUET_SINK')]",
+                "[concat(variables('factoryId'), '/linkedServices/LS_SQLSERVER_ONPREM')]"
+            ]
+        }
+    ]
+}

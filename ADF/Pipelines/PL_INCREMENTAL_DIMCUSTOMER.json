@@ -1,0 +1,157 @@
+{
+    "name":  "PL_INCREMENTAL_DIMCUSTOMER",
+    "properties":  {
+                       "activities":  [
+                                          {
+                                              "name":  "LOOKUP_CUSTOMER_WATERMARK",
+                                              "type":  "Lookup",
+                                              "dependsOn":  [
+
+                                                            ],
+                                              "policy":  {
+                                                             "timeout":  "0.12:00:00",
+                                                             "retry":  0,
+                                                             "retryIntervalInSeconds":  30,
+                                                             "secureOutput":  false,
+                                                             "secureInput":  false
+                                                         },
+                                              "userProperties":  [
+
+                                                                 ],
+                                              "typeProperties":  {
+                                                                     "source":  {
+                                                                                    "type":  "SqlServerSource",
+                                                                                    "sqlReaderQuery":  "SELECT LastLoadValue\nFROM dbo.WatermarkTable\nWHERE TableName = \u0027DimCustomer\u0027;",
+                                                                                    "queryTimeout":  "02:00:00",
+                                                                                    "partitionOption":  "None"
+                                                                                },
+                                                                     "dataset":  {
+                                                                                     "referenceName":  "DS_SQLSERVER_SOURCE",
+                                                                                     "type":  "DatasetReference",
+                                                                                     "parameters":  {
+
+                                                                                                    }
+                                                                                 }
+                                                                 }
+                                          },
+                                          {
+                                              "name":  "COPY_NEW_CUSTOMERS",
+                                              "type":  "Copy",
+                                              "dependsOn":  [
+                                                                {
+                                                                    "activity":  "LOOKUP_CUSTOMER_WATERMARK",
+                                                                    "dependencyConditions":  [
+                                                                                                 "Succeeded"
+                                                                                             ]
+                                                                }
+                                                            ],
+                                              "policy":  {
+                                                             "timeout":  "0.12:00:00",
+                                                             "retry":  0,
+                                                             "retryIntervalInSeconds":  30,
+                                                             "secureOutput":  false,
+                                                             "secureInput":  false
+                                                         },
+                                              "userProperties":  [
+
+                                                                 ],
+                                              "typeProperties":  {
+                                                                     "source":  {
+                                                                                    "type":  "SqlServerSource",
+                                                                                    "sqlReaderQuery":  "SELECT *\nFROM dbo.DimCustomer\nWHERE CustomerKey \u003e\n(\n    SELECT LastLoadValue\n    FROM dbo.WatermarkTable\n    WHERE TableName = \u0027DimCustomer\u0027\n);",
+                                                                                    "queryTimeout":  "02:00:00",
+                                                                                    "partitionOption":  "None"
+                                                                                },
+                                                                     "sink":  {
+                                                                                  "type":  "ParquetSink",
+                                                                                  "storeSettings":  {
+                                                                                                        "type":  "AzureBlobFSWriteSettings"
+                                                                                                    },
+                                                                                  "formatSettings":  {
+                                                                                                         "type":  "ParquetWriteSettings"
+                                                                                                     }
+                                                                              },
+                                                                     "enableStaging":  false,
+                                                                     "translator":  {
+                                                                                        "type":  "TabularTranslator",
+                                                                                        "typeConversion":  true,
+                                                                                        "typeConversionSettings":  {
+                                                                                                                       "allowDataTruncation":  true,
+                                                                                                                       "treatBooleanAsNumber":  false
+                                                                                                                   }
+                                                                                    }
+                                                                 },
+                                              "inputs":  [
+                                                             {
+                                                                 "referenceName":  "DS_SQLSERVER_SOURCE",
+                                                                 "type":  "DatasetReference",
+                                                                 "parameters":  {
+
+                                                                                }
+                                                             }
+                                                         ],
+                                              "outputs":  [
+                                                              {
+                                                                  "referenceName":  "DS_ADLS_PARQUET_SINK",
+                                                                  "type":  "DatasetReference",
+                                                                  "parameters":  {
+
+                                                                                 }
+                                                              }
+                                                          ]
+                                          },
+                                          {
+                                              "name":  "UPDATE_CUSTOMER_WATERMARK",
+                                              "type":  "SqlServerStoredProcedure",
+                                              "dependsOn":  [
+                                                                {
+                                                                    "activity":  "COPY_NEW_CUSTOMERS",
+                                                                    "dependencyConditions":  [
+                                                                                                 "Succeeded"
+                                                                                             ]
+                                                                }
+                                                            ],
+                                              "policy":  {
+                                                             "timeout":  "0.12:00:00",
+                                                             "retry":  0,
+                                                             "retryIntervalInSeconds":  30,
+                                                             "secureOutput":  false,
+                                                             "secureInput":  false
+                                                         },
+                                              "userProperties":  [
+
+                                                                 ],
+                                              "typeProperties":  {
+                                                                     "storedProcedureName":  "[[dbo].[UpdateWatermark]",
+                                                                     "storedProcedureParameters":  {
+                                                                                                       "TableSchema":  {
+                                                                                                                           "value":  "dbo",
+                                                                                                                           "type":  "String"
+                                                                                                                       },
+                                                                                                       "TableName":  {
+                                                                                                                         "value":  "DimCustomer",
+                                                                                                                         "type":  "String"
+                                                                                                                     },
+                                                                                                       "WatermarkColumn":  {
+                                                                                                                               "value":  "CustomerKey",
+                                                                                                                               "type":  "String"
+                                                                                                                           }
+                                                                                                   }
+                                                                 },
+                                              "linkedServiceName":  {
+                                                                        "referenceName":  "LS_SQLSERVER_ONPREM",
+                                                                        "type":  "LinkedServiceReference"
+                                                                    }
+                                          }
+                                      ],
+                       "policy":  {
+                                      "elapsedTimeMetric":  {
+
+                                                            }
+                                  },
+                       "annotations":  [
+
+                                       ],
+                       "lastPublishTime":  "2026-11-07T13:23:02Z"
+                   }
+}

@@ -1,0 +1,16 @@
+{
+    "name":  "LS_ADLS_MIGRATION",
+    "properties":  {
+                       "annotations":  [
+
+                                       ],
+                       "type":  "AzureBlobFS",
+                       "typeProperties":  {
+                                              "url":  "[parameters(\u0027LS_ADLS_MIGRATION_properties_typeProperties_url\u0027)]",
+                                              "accountKey":  {
+                                                                 "type":  "SecureString",
+                                                                 "value":  "[parameters(\u0027LS_ADLS_MIGRATION_accountKey\u0027)]"
+                                                             }
+                                          }
+                   }
+}

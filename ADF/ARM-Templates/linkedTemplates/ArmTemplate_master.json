@@ -1,0 +1,91 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "factoryName": {
+            "type": "string",
+            "metadata": "Data Factory name",
+            "defaultValue": "adf-sql-migration01"
+        },
+        "LS_SQLSERVER_ONPREM_password": {
+            "type": "secureString",
+            "metadata": "Secure string for 'password' of 'LS_SQLSERVER_ONPREM'"
+        },
+        "LS_ADLS_MIGRATION_accountKey": {
+            "type": "secureString",
+            "metadata": "Secure string for 'accountKey' of 'LS_ADLS_MIGRATION'"
+        },
+        "integrationRuntime1_properties_typeProperties_linkedInfo_resourceId": {
+            "type": "string",
+            "defaultValue": "/subscriptions/5a596385-e620-432b-bf0f-0c0b12f9dafe/resourcegroups/rg_mohammad1/providers/Microsoft.DataFactory/factories/adfmultifilepractice01/integrationruntimes/IR-MYSQL-LOCAL-NEW"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_server": {
+            "type": "string",
+            "defaultValue": ".\\SQLEXPRESS"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_database": {
+            "type": "string",
+            "defaultValue": "SQL_ADF_Migration_Project"
+        },
+        "LS_SQLSERVER_ONPREM_properties_typeProperties_userName": {
+            "type": "string",
+            "defaultValue": "adf_sql_login"
+        },
+        "LS_ADLS_MIGRATION_properties_typeProperties_url": {
+            "type": "string",
+            "defaultValue": "https://migrationfromsqltoadls.dfs.core.windows.net"
+        },
+        "containerUri": {
+            "type": "string",
+            "metadata": "URI to storage account containing linked ARM templates"
+        },
+        "containerSasToken": {
+            "type": "string",
+            "metadata": "Sas token to storage account containing linked ARM templates"
+        }
+    },
+    "variables": {
+        "factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+    },
+    "resources": [
+        {
+            "name": "adf-sql-migration01_ArmTemplate_0",
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2024-03-01",
+            "properties": {
+                "mode": "incremental",
+                "templateLink": {
+                    "uri": "[concat(parameters('containerUri'), '/ArmTemplate_0.json', parameters('containerSasToken'))]",
+                    "contentVersion": "1.0.0.0"
+                },
+                "parameters": {
+                    "factoryName": {
+                        "value": "[parameters('factoryName')]"
+                    },
+                    "LS_ADLS_MIGRATION_accountKey": {
+                        "value": "[parameters('LS_ADLS_MIGRATION_accountKey')]"
+                    },
+                    "LS_SQLSERVER_ONPREM_password": {
+                        "value": "[parameters('LS_SQLSERVER_ONPREM_password')]"
+                    },
+                    "integrationRuntime1_properties_typeProperties_linkedInfo_resourceId": {
+                        "value": "[parameters('integrationRuntime1_properties_typeProperties_linkedInfo_resourceId')]"
+                    },
+                    "LS_ADLS_MIGRATION_properties_typeProperties_url": {
+                        "value": "[parameters('LS_ADLS_MIGRATION_properties_typeProperties_url')]"
+                    },
+                    "LS_SQLSERVER_ONPREM_properties_typeProperties_server": {
+                        "value": "[parameters('LS_SQLSERVER_ONPREM_properties_typeProperties_server')]"
+                    },
+                    "LS_SQLSERVER_ONPREM_properties_typeProperties_database": {
+                        "value": "[parameters('LS_SQLSERVER_ONPREM_properties_typeProperties_database')]"
+                    },
+                    "LS_SQLSERVER_ONPREM_properties_typeProperties_userName": {
+                        "value": "[parameters('LS_SQLSERVER_ONPREM_properties_typeProperties_userName')]"
+                    }
+                }
+            },
+            "dependsOn": []
+        }
+    ]
+}

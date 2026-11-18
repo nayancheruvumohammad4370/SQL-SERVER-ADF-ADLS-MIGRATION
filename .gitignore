@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+local.settings.json
+*.publishsettings
+*.publish.xml
+*.pfx
+*.key
+*.pem
+*.bacpac
+*.bak
+*.mdf
+*.ldf

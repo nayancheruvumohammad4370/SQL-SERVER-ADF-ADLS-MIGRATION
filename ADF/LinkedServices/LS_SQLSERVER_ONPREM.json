@@ -1,0 +1,25 @@
+{
+    "name":  "LS_SQLSERVER_ONPREM",
+    "properties":  {
+                       "annotations":  [
+
+                                       ],
+                       "type":  "SqlServer",
+                       "typeProperties":  {
+                                              "server":  "[parameters(\u0027LS_SQLSERVER_ONPREM_properties_typeProperties_server\u0027)]",
+                                              "database":  "[parameters(\u0027LS_SQLSERVER_ONPREM_properties_typeProperties_database\u0027)]",
+                                              "encrypt":  "mandatory",
+                                              "trustServerCertificate":  true,
+                                              "authenticationType":  "SQL",
+                                              "userName":  "[parameters(\u0027LS_SQLSERVER_ONPREM_properties_typeProperties_userName\u0027)]",
+                                              "password":  {
+                                                               "type":  "SecureString",
+                                                               "value":  "[parameters(\u0027LS_SQLSERVER_ONPREM_password\u0027)]"
+                                                           }
+                                          },
+                       "connectVia":  {
+                                          "referenceName":  "integrationRuntime1",
+                                          "type":  "IntegrationRuntimeReference"
+                                      }
+                   }
+}
